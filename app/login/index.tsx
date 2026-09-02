@@ -86,7 +86,7 @@ export default function LoginScreen() {
           <TextInput
             style={styles.input}
             placeholder="seu.email@exemplo.com"
-            placeholderTextColor={COLORS.primaryLight}
+            placeholderTextColor= '#666666'
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -97,7 +97,7 @@ export default function LoginScreen() {
           <TextInput
             style={styles.input}
             placeholder="Sua senha"
-            placeholderTextColor={COLORS.primaryLight}
+            placeholderTextColor= '#666666'
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -109,7 +109,7 @@ export default function LoginScreen() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={COLORS.primaryDark} />
+              <ActivityIndicator color={COLORS.primaryMedium} />
             ) : (
               <Text style={styles.submitButtonText}>
                 {isRegistering ? 'CADASTRAR' : 'ENTRAR'}
@@ -181,22 +181,22 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   input: {
-    backgroundColor: COLORS.primaryMedium,
-    color: COLORS.white,
+    backgroundColor: '#fff',
+    color: COLORS.primaryDark,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 14,
   },
   submitButton: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: COLORS.primaryVibrant,
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 25,
   },
   submitButtonText: {
-    color: COLORS.primaryDark,
+    color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
     letterSpacing: 1,
