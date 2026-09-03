@@ -10,31 +10,62 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Image // 1. Adicionado Image aos imports
+  Image,
+  ScrollView
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  updateProfile 
+} from 'firebase/auth';
 import { auth } from '../../src/config/firebase';
 import { COLORS } from '../../src/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
 
   const handleAuth = async () => {
-    if (!email || !password) {
-      Alert.alert('Atenção', 'Por favor, preencha o e-mail e a senha.');
-      return;
+    if (isRegistering) {
+      if (!name.trim()) {
+        Alert.alert('Atenção', 'Por favor, informe seu nome completo.');
+        return;
+      }
+      if (!email || !password || !confirmPassword) {
+        Alert.alert('Atenção', 'Por favor, preencha todos os campos.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        Alert.alert('Atenção', 'As senhas não coincidem.');
+        return;
+      }
+    } else {
+      if (!email || !password) {
+        Alert.alert('Atenção', 'Por favor, preencha o e-mail e a senha.');
+        return;
+      }
     }
 
     setLoading(true);
     try {
       if (isRegistering) {
-        await createUserWithEmailAndPassword(auth, email.trim(), password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        
+        if (userCredential.user) {
+          await updateProfile(userCredential.user, {
+            displayName: name.trim()
+          });
+        }
+
         Alert.alert('Sucesso', 'Conta criada com sucesso!');
       } else {
         await signInWithEmailAndPassword(auth, email.trim(), password);
@@ -61,73 +92,134 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.content}
       >
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.white} />
-        </TouchableOpacity>
-
-        {/* Marca / Header */}
-        <View style={styles.brandContainer}>
-          {/* 2. Logo substituindo o Ionicons */}
-          <Image 
-            source={require('../../assets/images/Logo-01-Branco.png')} 
-            style={styles.logo} 
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>
-            {isRegistering ? 'Crie sua Conta' : 'Acesse sua Conta'}
-          </Text>
-          <Text style={styles.subtitle}>
-            Primeira Igreja Presbiteriana de Cabo Frio
-          </Text>
-        </View>
-
-        <View style={styles.form}>
-          <Text style={styles.label}>E-mail</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="seu.email@exemplo.com"
-            placeholderTextColor= '#666666'
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-
-          <Text style={styles.label}>Senha</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Sua senha"
-            placeholderTextColor= '#666666'
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-
-          <TouchableOpacity 
-            style={styles.submitButton} 
-            onPress={handleAuth} 
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color={COLORS.primaryMedium} />
-            ) : (
-              <Text style={styles.submitButtonText}>
-                {isRegistering ? 'CADASTRAR' : 'ENTRAR'}
-              </Text>
-            )}
+        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color={COLORS.white} />
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.switchModeButton} 
-            onPress={() => setIsRegistering(!isRegistering)}
-          >
-            <Text style={styles.switchModeText}>
-              {isRegistering 
-                ? 'Já tem uma conta? Faça Login' 
-                : 'Ainda não tem conta? Cadastre-se'}
+          {/* Marca / Header */}
+          <View style={styles.brandContainer}>
+            <Image 
+              source={require('../../assets/images/Logo-01-Branco.png')} 
+              style={styles.logo} 
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>
+              {isRegistering ? 'Crie sua Conta' : 'Acesse sua Conta'}
             </Text>
-          </TouchableOpacity>
-        </View>
+            <Text style={styles.subtitle}>
+              Primeira Igreja Presbiteriana de Cabo Frio
+            </Text>
+          </View>
+
+          <View style={styles.form}>
+            {/* Nome Completo - Cadastro */}
+            {isRegistering && (
+              <>
+                <Text style={styles.label}>Nome Completo</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Seu nome completo"
+                  placeholderTextColor="#666666"
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                />
+              </>
+            )}
+
+            {/* E-mail */}
+            <Text style={styles.label}>E-mail</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="seu.email@exemplo.com"
+              placeholderTextColor="#666666"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            {/* Senha */}
+            <Text style={styles.label}>Senha</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Sua senha"
+                placeholderTextColor="#666666"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity 
+                style={styles.eyeIcon} 
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons 
+                  name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                  size={22} 
+                  color="#666666" 
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Confirmar Senha - Cadastro */}
+            {isRegistering && (
+              <>
+                <Text style={styles.label}>Confirmar Senha</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    placeholder="Repita sua senha"
+                    placeholderTextColor="#666666"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!showConfirmPassword}
+                  />
+                  <TouchableOpacity 
+                    style={styles.eyeIcon} 
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    <Ionicons 
+                      name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
+                      size={22} 
+                      color="#666666" 
+                    />
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+
+            <TouchableOpacity 
+              style={styles.submitButton} 
+              onPress={handleAuth} 
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color={COLORS.primaryMedium} />
+              ) : (
+                <Text style={styles.submitButtonText}>
+                  {isRegistering ? 'CADASTRAR' : 'ENTRAR'}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.switchModeButton} 
+              onPress={() => {
+                setIsRegistering(!isRegistering);
+                setName('');
+                setConfirmPassword('');
+              }}
+            >
+              <Text style={styles.switchModeText}>
+                {isRegistering 
+                  ? 'Já tem uma conta? Faça Login' 
+                  : 'Ainda não tem conta? Cadastre-se'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -136,11 +228,15 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#02493D', // Cole o código Hex da sua cor aqui
+    backgroundColor: '#02493D',
   },
   content: {
     flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
     paddingHorizontal: 25,
+    paddingVertical: 20,
     justifyContent: 'center',
   },
   backButton: {
@@ -151,12 +247,12 @@ const styles = StyleSheet.create({
   },
   brandContainer: {
     alignItems: 'center',
-    marginBottom: 25,
+    marginBottom: 20,
+    marginTop: 30,
   },
-  // 3. Estilização da Logo
   logo: {
-    width: 520,
-    height: 320,
+    width: 280,
+    height: 120,
     marginBottom: 10,
   },
   title: {
@@ -188,6 +284,22 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 14,
   },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+  },
+  passwordInput: {
+    flex: 1,
+    color: COLORS.primaryDark,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+  },
+  eyeIcon: {
+    paddingHorizontal: 12,
+  },
   submitButton: {
     backgroundColor: COLORS.primaryVibrant,
     borderRadius: 8,
@@ -204,6 +316,7 @@ const styles = StyleSheet.create({
   switchModeButton: {
     marginTop: 18,
     alignItems: 'center',
+    marginBottom: 20,
   },
   switchModeText: {
     color: COLORS.primaryLight,

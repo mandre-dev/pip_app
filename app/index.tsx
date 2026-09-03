@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../src/constants/theme';
@@ -23,12 +23,13 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Marca/Header Central */}
+        {/* Marca/Header Central com Logo */}
         <View style={styles.brandContainer}>
-          <Ionicons name="location-outline" size={20} color={COLORS.primaryLight} />
-          <Text style={styles.brandTitle}>PRIMEIRA IGREJA</Text>
-          <Text style={styles.brandSubtitle}>PRESBITERIANA</Text>
-          <Text style={styles.brandCity}>DE CABO FRIO</Text>
+          <Image 
+            source={require('../assets/images/Logo-01-Branco.png')} 
+            style={styles.logo} 
+            resizeMode="contain"
+          />
         </View>
 
         {/* Grid de Funcionalidades */}
@@ -112,27 +113,11 @@ const styles = StyleSheet.create({
   },
   brandContainer: {
     alignItems: 'center',
-    marginVertical: 25,
+    marginVertical: 15,
   },
-  brandTitle: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-    letterSpacing: 2,
-    marginTop: 4,
-  },
-  brandSubtitle: {
-    color: COLORS.white,
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 1,
-  },
-  brandCity: {
-    color: COLORS.primaryLight,
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 3,
-    marginTop: 2,
+  logo: {
+    width: 520,
+    height: 240,
   },
   grid: {
     flexDirection: 'row',
