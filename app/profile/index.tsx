@@ -73,48 +73,45 @@ export default function ProfileScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Avatar e Informações do Usuário Atual */}
-        <View style={styles.userInfoContainer}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initial}</Text>
+        <View style={styles.mainContent}>
+          {/* Avatar e Informações do Usuário Atual */}
+          <View style={styles.userInfoContainer}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initial}</Text>
+            </View>
+            <Text style={styles.userName}>{userName}</Text>
+            <Text style={styles.userEmail}>{userEmail}</Text>
           </View>
-          <Text style={styles.userName}>{userName}</Text>
-          <Text style={styles.userEmail}>{userEmail}</Text>
+
+          {/* Lista de Opções */}
+          <View style={styles.optionsList}>
+            <TouchableOpacity
+              style={styles.cardOption}
+              activeOpacity={0.7}
+              onPress={() => router.push("profile/personal-data" as any)}
+            >
+              <View style={styles.cardLeft}>
+                <Ionicons name="person-outline" size={24} color="#1E796A" />
+                <Text style={styles.cardText}>Dados cadastrais</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#1E796A" />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.cardOption} activeOpacity={0.7}>
+              <View style={styles.cardLeft}>
+                <Ionicons
+                  name="shield-checkmark-outline"
+                  size={24}
+                  color="#1E796A"
+                />
+                <Text style={styles.cardText}>Segurança</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#1E796A" />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Lista de Opções */}
-        <View style={styles.optionsList}>
-          <TouchableOpacity
-            style={styles.cardOption}
-            activeOpacity={0.7}
-            onPress={() =>
-              Alert.alert(
-                "Dados Cadastrais",
-                `Nome: ${userName}\nE-mail: ${userEmail}`,
-              )
-            }
-          >
-            <View style={styles.cardLeft}>
-              <Ionicons name="person-outline" size={24} color="#1E796A" />
-              <Text style={styles.cardText}>Dados cadastrais</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#1E796A" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.cardOption} activeOpacity={0.7}>
-            <View style={styles.cardLeft}>
-              <Ionicons
-                name="shield-checkmark-outline"
-                size={24}
-                color="#1E796A"
-              />
-              <Text style={styles.cardText}>Segurança</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#1E796A" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Botão de Sair */}
+        {/* Botão de Sair fixado no final */}
         <TouchableOpacity
           style={styles.logoutButton}
           onPress={() => setLogoutModalVisible(true)}
@@ -148,14 +145,14 @@ export default function ProfileScreen() {
                 style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => setLogoutModalVisible(false)}
               >
-                <Text style={styles.cancelButtonText}>não</Text>
+                <Text style={styles.cancelButtonText}>Não</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.modalButton, styles.confirmButton]}
                 onPress={performLogout}
               >
-                <Text style={styles.confirmButtonText}>sim</Text>
+                <Text style={styles.confirmButtonText}>Sim</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -194,8 +191,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   scrollContent: {
+    flexGrow: 1,
+    justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingBottom: 30,
+    paddingBottom: 24,
+  },
+  mainContent: {
+    width: "100%",
   },
   userInfoContainer: {
     alignItems: "center",
@@ -227,7 +229,7 @@ const styles = StyleSheet.create({
   },
   optionsList: {
     gap: 12,
-    marginBottom: 30,
+    marginBottom: 20,
   },
   cardOption: {
     flexDirection: "row",
@@ -258,14 +260,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 16,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: "auto",
   },
   logoutButtonText: {
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
   },
-  // Estilos do Modal Customizado do App
+  // Estilos do Modal Customizado
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.6)",
