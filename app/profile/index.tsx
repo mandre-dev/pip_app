@@ -97,7 +97,7 @@ export default function ProfileScreen() {
               <Ionicons name="chevron-forward" size={20} color="#1E796A" />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cardOption} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.cardOption} activeOpacity={0.7} onPress={() => router.push("profile/security" as any)}>
               <View style={styles.cardLeft}>
                 <Ionicons
                   name="shield-checkmark-outline"
