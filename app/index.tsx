@@ -21,8 +21,8 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header Superior */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => console.log("Configurações")}>
-            <Ionicons name="settings-outline" size={26} color={COLORS.white} />
+          <TouchableOpacity onPress={() => router.push("/settings")}>
+            <Ionicons name="settings-outline" size={26} color="#FFF" />
           </TouchableOpacity>
 
           <TouchableOpacity

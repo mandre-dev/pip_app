@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 15,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     borderBottomColor: "#EEEEEE",
     backgroundColor: "#1E796A",
   },
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     color: "#1E796A",
   },
   logoutButton: {
-    backgroundColor: "#25A688",
+    backgroundColor: "#D9383A",
     borderRadius: 10,
     paddingVertical: 16,
     alignItems: "center",
