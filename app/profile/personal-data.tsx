@@ -278,11 +278,21 @@ export default function PersonalDataScreen() {
 
     setLoading(true);
     try {
-      await updateProfile(user, {
+      // 1. Atualiza no Auth apenas com o Nome e URL curta (se for http/https)
+      const updateAuthData: { displayName: string; photoURL?: string } = {
         displayName: name.trim(),
-        photoURL: photoUrl || "",
-      });
+      };
 
+      if (
+        photoUrl &&
+        (photoUrl.startsWith("http://") || photoUrl.startsWith("https://"))
+      ) {
+        updateAuthData.photoURL = photoUrl;
+      }
+
+      await updateProfile(user, updateAuthData);
+
+      // 2. Salva todos os dados (incluindo o Base64 da imagem) no Firestore
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(
         userDocRef,
@@ -293,7 +303,7 @@ export default function PersonalDataScreen() {
           cpf,
           birthDate,
           phone,
-          photoUrl,
+          photoUrl: photoUrl || null,
           updatedAt: new Date(),
         },
         { merge: true },

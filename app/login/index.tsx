@@ -35,6 +35,14 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
 
+  // Mensagens de erro individuais
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
   // Estados de Foco
   const [isNameFocused, setIsNameFocused] = useState(false);
   const [isEmailFocused, setIsEmailFocused] = useState(false);
@@ -42,77 +50,108 @@ export default function LoginScreen() {
   const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] =
     useState(false);
 
-  // Verifica se há tela anterior para exibir ou ocultar o botão de voltar
   const canGoBack = router.canGoBack();
 
-  const handleAuth = async () => {
+  const validateFields = () => {
+    let valid = true;
+    const newErrors = {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
+
+    if (isRegistering && !name.trim()) {
+      newErrors.name = "Nome é obrigatório.";
+      valid = false;
+    }
+
+    if (!email.trim()) {
+      newErrors.email = "E-mail é obrigatório.";
+      valid = false;
+    }
+
+    if (!password) {
+      newErrors.password = "Senha é obrigatória.";
+      valid = false;
+    }
+
     if (isRegistering) {
-      if (!name.trim()) {
-        Alert.alert("Atenção", "Por favor, informe seu nome completo.");
-        return;
-      }
-      if (!email || !password || !confirmPassword) {
-        Alert.alert("Atenção", "Por favor, preencha todos os campos.");
-        return;
-      }
-      if (password !== confirmPassword) {
-        Alert.alert("Atenção", "As senhas não coincidem.");
-        return;
-      }
-    } else {
-      if (!email || !password) {
-        Alert.alert("Atenção", "Por favor, preencha o e-mail e a senha.");
-        return;
+      if (!confirmPassword) {
+        newErrors.confirmPassword = "Confirmação de senha é obrigatória.";
+        valid = false;
+      } else if (password !== confirmPassword) {
+        newErrors.confirmPassword = "As senhas não coincidem.";
+        valid = false;
       }
     }
 
+    setErrors(newErrors);
+    return valid;
+  };
+
+  const handleAuth = async () => {
+    setErrors({ name: "", email: "", password: "", confirmPassword: "" });
+
+    // 1. Valida campos obrigatórios localmente
+    if (!validateFields()) return;
+
     setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
+
     try {
       if (isRegistering) {
-        // 1. Cria a conta no Firebase Auth
+        // 2. Cria a conta no Firebase Auth (ele valida e-mail duplicado automaticamente)
         const userCredential = await createUserWithEmailAndPassword(
           auth,
-          email.trim(),
+          cleanEmail,
           password,
         );
 
         if (userCredential.user) {
-          // 2. Atualiza o perfil no Auth com o nome
           await updateProfile(userCredential.user, {
             displayName: name.trim(),
           });
 
-          // 3. Salva o documento inicial na coleção 'users' do Firestore com nome e e-mail
           await setDoc(doc(db, "users", userCredential.user.uid), {
             name: name.trim(),
-            email: email.trim(),
+            email: cleanEmail,
             createdAt: new Date(),
           });
 
-          // 4. Força o recarregamento do usuário local
           await userCredential.user.reload();
         }
 
         Alert.alert("Sucesso", "Conta criada com sucesso!");
       } else {
-        await signInWithEmailAndPassword(auth, email.trim(), password);
+        await signInWithEmailAndPassword(auth, cleanEmail, password);
       }
       router.replace("/");
     } catch (error: any) {
-      let message = "Ocorreu um erro ao tentar acessar.";
-      if (error.code === "auth/invalid-email") message = "E-mail inválido.";
-      if (
-        error.code === "auth/user-not-found" ||
-        error.code === "auth/wrong-password"
-      ) {
-        message = "E-mail ou senha incorretos.";
-      }
-      if (error.code === "auth/email-already-in-use")
-        message = "Este e-mail já está cadastrado.";
-      if (error.code === "auth/weak-password")
-        message = "A senha deve ter pelo menos 6 caracteres.";
+      console.error("Erro na autenticação:", error.code, error.message);
 
-      Alert.alert("Erro", message);
+      if (error.code === "auth/email-already-in-use") {
+        setErrors((prev) => ({
+          ...prev,
+          email: "Este e-mail já está vinculado a outra conta.",
+        }));
+        Alert.alert("Atenção", "Este e-mail já está cadastrado.");
+      } else if (error.code === "auth/invalid-email") {
+        setErrors((prev) => ({ ...prev, email: "E-mail inválido." }));
+      } else if (
+        error.code === "auth/user-not-found" ||
+        error.code === "auth/wrong-password" ||
+        error.code === "auth/invalid-credential"
+      ) {
+        Alert.alert("Erro", "E-mail ou senha incorretos.");
+      } else if (error.code === "auth/weak-password") {
+        setErrors((prev) => ({
+          ...prev,
+          password: "A senha deve ter pelo menos 6 caracteres.",
+        }));
+      } else {
+        Alert.alert("Erro", "Ocorreu um erro ao tentar processar o cadastro.");
+      }
     } finally {
       setLoading(false);
     }
@@ -137,7 +176,6 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
         >
-          {/* Botão de voltar renderizado apenas se houver histórico válido */}
           {canGoBack && (
             <TouchableOpacity
               style={styles.backButton}
@@ -147,7 +185,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
           )}
 
-          {/* Marca / Header */}
           <View style={styles.brandContainer}>
             <Image
               source={require("../../assets/images/Logo-01-Branco.png")}
@@ -163,49 +200,64 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.form}>
-            {/* Nome Completo - Cadastro */}
+            {/* Nome Completo */}
             {isRegistering && (
               <>
-                <Text style={styles.label}>Nome Completo</Text>
+                <Text style={styles.label}>Nome Completo *</Text>
                 <TextInput
                   style={[
                     styles.input,
                     isNameFocused ? styles.inputFocused : null,
+                    !!errors.name ? styles.inputError : null,
                   ]}
                   placeholder="Seu nome completo"
                   placeholderTextColor="#666666"
                   value={name}
-                  onChangeText={setName}
+                  onChangeText={(text) => {
+                    setName(text);
+                    if (errors.name) setErrors((p) => ({ ...p, name: "" }));
+                  }}
                   onFocus={() => setIsNameFocused(true)}
                   onBlur={() => setIsNameFocused(false)}
                   autoCapitalize="words"
                 />
+                {!!errors.name && (
+                  <Text style={styles.errorText}>{errors.name}</Text>
+                )}
               </>
             )}
 
             {/* E-mail */}
-            <Text style={styles.label}>E-mail</Text>
+            <Text style={styles.label}>E-mail *</Text>
             <TextInput
               style={[
                 styles.input,
                 isEmailFocused ? styles.inputFocused : null,
+                !!errors.email ? styles.inputError : null,
               ]}
               placeholder="seu.email@exemplo.com"
               placeholderTextColor="#666666"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errors.email) setErrors((p) => ({ ...p, email: "" }));
+              }}
               onFocus={() => setIsEmailFocused(true)}
               onBlur={() => setIsEmailFocused(false)}
               keyboardType="email-address"
               autoCapitalize="none"
             />
+            {!!errors.email && (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            )}
 
             {/* Senha */}
-            <Text style={styles.label}>Senha</Text>
+            <Text style={styles.label}>Senha *</Text>
             <View
               style={[
                 styles.passwordContainer,
                 isPasswordFocused ? styles.inputFocused : null,
+                !!errors.password ? styles.inputError : null,
               ]}
             >
               <TextInput
@@ -213,7 +265,11 @@ export default function LoginScreen() {
                 placeholder="Sua senha"
                 placeholderTextColor="#666666"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (errors.password)
+                    setErrors((p) => ({ ...p, password: "" }));
+                }}
                 onFocus={() => setIsPasswordFocused(true)}
                 onBlur={() => setIsPasswordFocused(false)}
                 secureTextEntry={!showPassword}
@@ -229,8 +285,10 @@ export default function LoginScreen() {
                 />
               </TouchableOpacity>
             </View>
+            {!!errors.password && (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            )}
 
-            {/* Botão Esqueci minha Senha */}
             {!isRegistering && (
               <TouchableOpacity
                 style={styles.forgotPasswordButton}
@@ -242,14 +300,15 @@ export default function LoginScreen() {
               </TouchableOpacity>
             )}
 
-            {/* Confirmar Senha - Cadastro */}
+            {/* Confirmar Senha */}
             {isRegistering && (
               <>
-                <Text style={styles.label}>Confirmar Senha</Text>
+                <Text style={styles.label}>Confirmar Senha *</Text>
                 <View
                   style={[
                     styles.passwordContainer,
                     isConfirmPasswordFocused ? styles.inputFocused : null,
+                    !!errors.confirmPassword ? styles.inputError : null,
                   ]}
                 >
                   <TextInput
@@ -257,7 +316,11 @@ export default function LoginScreen() {
                     placeholder="Repita sua senha"
                     placeholderTextColor="#666666"
                     value={confirmPassword}
-                    onChangeText={setConfirmPassword}
+                    onChangeText={(text) => {
+                      setConfirmPassword(text);
+                      if (errors.confirmPassword)
+                        setErrors((p) => ({ ...p, confirmPassword: "" }));
+                    }}
                     onFocus={() => setIsConfirmPasswordFocused(true)}
                     onBlur={() => setIsConfirmPasswordFocused(false)}
                     secureTextEntry={!showConfirmPassword}
@@ -275,6 +338,9 @@ export default function LoginScreen() {
                     />
                   </TouchableOpacity>
                 </View>
+                {!!errors.confirmPassword && (
+                  <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                )}
               </>
             )}
 
@@ -298,6 +364,12 @@ export default function LoginScreen() {
                 setIsRegistering(!isRegistering);
                 setName("");
                 setConfirmPassword("");
+                setErrors({
+                  name: "",
+                  email: "",
+                  password: "",
+                  confirmPassword: "",
+                });
               }}
             >
               <Text style={styles.switchModeText}>
@@ -373,6 +445,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     borderWidth: 1.5,
     borderColor: "transparent",
+  },
+  inputError: {
+    borderColor: "#FF4D4D",
+    borderWidth: 1.5,
+  },
+  errorText: {
+    color: "#FF9999",
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: "600",
   },
   passwordContainer: {
     flexDirection: "row",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -9,31 +9,70 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  Image,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { auth } from "../../src/config/firebase";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { auth, db } from "../../src/config/firebase";
+import { signOut, User } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(auth.currentUser);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
-  // Escuta alterações na autenticação em tempo real
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
-        router.replace("/login" as any);
-      }
-      setLoading(false);
-    });
+  // Recarrega os dados do Firestore e do Auth toda vez que a tela ganha foco
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
 
-    return () => unsubscribe();
-  }, []);
+      const loadUserData = async () => {
+        const currentUser = auth.currentUser;
+
+        if (!currentUser) {
+          router.replace("/login" as any);
+          return;
+        }
+
+        setUser(currentUser);
+        setUserName(currentUser.displayName || "Membro PIPCF");
+
+        try {
+          // Busca os dados salvos no Firestore (incluindo o Base64/URL da foto)
+          const userDocRef = doc(db, "users", currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists() && isMounted) {
+            const data = userDoc.data();
+            if (data.name) setUserName(data.name);
+            if (data.photoUrl) {
+              setPhotoUrl(data.photoUrl);
+            } else if (currentUser.photoURL) {
+              setPhotoUrl(currentUser.photoURL);
+            } else {
+              setPhotoUrl(null);
+            }
+          } else if (isMounted) {
+            setPhotoUrl(currentUser.photoURL || null);
+          }
+        } catch (error) {
+          console.error("Erro ao carregar dados do usuário no Profile:", error);
+        } finally {
+          if (isMounted) setLoading(false);
+        }
+      };
+
+      loadUserData();
+
+      return () => {
+        isMounted = false;
+      };
+    }, []),
+  );
 
   const performLogout = async () => {
     setLogoutModalVisible(false);
@@ -53,10 +92,7 @@ export default function ProfileScreen() {
     );
   }
 
-  // Pega dinamicamente os dados do usuário autenticado
-  const userName = user?.displayName || "Membro PIPCF";
   const userEmail = user?.email || "email@exemplo.com";
-  const initial = userName.charAt(0).toUpperCase();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -77,7 +113,16 @@ export default function ProfileScreen() {
           {/* Avatar e Informações do Usuário Atual */}
           <View style={styles.userInfoContainer}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initial}</Text>
+              {photoUrl ? (
+                <Image source={{ uri: photoUrl }} style={styles.avatarImage} />
+              ) : (
+                <Ionicons
+                  name="person"
+                  size={80}
+                  color="#A0A0A0"
+                  style={styles.avatarIcon}
+                />
+              )}
             </View>
             <Text style={styles.userName}>{userName}</Text>
             <Text style={styles.userEmail}>{userEmail}</Text>
@@ -97,7 +142,11 @@ export default function ProfileScreen() {
               <Ionicons name="chevron-forward" size={20} color="#1E796A" />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cardOption} activeOpacity={0.7} onPress={() => router.push("profile/security" as any)}>
+            <TouchableOpacity
+              style={styles.cardOption}
+              activeOpacity={0.7}
+              onPress={() => router.push("profile/security" as any)}
+            >
               <View style={styles.cardLeft}>
                 <Ionicons
                   name="shield-checkmark-outline"
@@ -177,8 +226,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 15,
-    borderBottomWidth: 0,
-    borderBottomColor: "#EEEEEE",
     backgroundColor: "#1E796A",
   },
   backButton: {
@@ -204,18 +251,22 @@ const styles = StyleSheet.create({
     marginVertical: 25,
   },
   avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: "#EAEAEA",
-    justifyContent: "center",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#DCDCDC",
+    justifyContent: "flex-end",
     alignItems: "center",
     marginBottom: 12,
+    overflow: "hidden",
   },
-  avatarText: {
-    fontSize: 36,
-    color: "#666",
-    fontWeight: "500",
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 50,
+  },
+  avatarIcon: {
+    marginBottom: -8,
   },
   userName: {
     fontSize: 20,
@@ -267,7 +318,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  // Estilos do Modal Customizado
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.6)",
