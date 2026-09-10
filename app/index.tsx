@@ -54,9 +54,9 @@ export default function HomeScreen() {
         {/* Grid de Funcionalidades */}
         <View style={styles.grid}>
           <HubButton
-            title="IGREJA"
+            title="SOBRE NÓS"
             iconName="business-outline"
-            onPress={() => router.push("/igreja")}
+            onPress={() => router.push("/about")}
           />
           <HubButton
             title="MINISTÉRIOS"
@@ -64,9 +64,9 @@ export default function HomeScreen() {
             onPress={() => router.push("/ministerios")}
           />
           <HubButton
-            title="NOTÍCIAS"
+            title="DEVOCIONAL"
             iconName="newspaper-outline"
-            onPress={() => console.log("Notícias")}
+            onPress={() => console.log("Devocional")}
           />
 
           <HubButton
@@ -86,7 +86,7 @@ export default function HomeScreen() {
           />
 
           <HubButton
-            title="MURAL DE ORAÇÕES"
+            title="PEDIDOS DE ORAÇÃO"
             iconName="journal-outline"
             onPress={() => router.push("/oracao")}
           />

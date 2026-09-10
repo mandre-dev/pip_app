@@ -34,7 +34,7 @@ export default function ProfileScreen() {
         const currentUser = auth.currentUser;
 
         if (!currentUser) {
-          router.replace("/login" as any);
+          router.replace("/login?fromLogout=true" as any);
           return;
         }
 
@@ -78,7 +78,8 @@ export default function ProfileScreen() {
     setLogoutModalVisible(false);
     try {
       await signOut(auth);
-      router.replace("/login" as any);
+      // Redireciona passando a query param fromLogout=true
+      router.replace("/login?fromLogout=true" as any);
     } catch (error) {
       Alert.alert("Erro", "Ocorreu um erro ao tentar sair da conta.");
     }

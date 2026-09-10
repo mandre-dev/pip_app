@@ -194,9 +194,6 @@ export default function LoginScreen() {
             <Text style={styles.title}>
               {isRegistering ? "Crie sua Conta" : "Acesse sua Conta"}
             </Text>
-            <Text style={styles.subtitle}>
-              Primeira Igreja Presbiteriana de Cabo Frio
-            </Text>
           </View>
 
           <View style={styles.form}>
