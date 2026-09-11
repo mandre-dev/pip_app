@@ -75,9 +75,9 @@ export default function HomeScreen() {
             onPress={() => router.push("/cells")}
           />
           <HubButton
-            title="DOAÇÃO"
+            title="CONTRIBUIR"
             iconName="heart-outline"
-            onPress={() => router.push("/doacao")}
+            onPress={() => router.push("/contribute" as any)}
           />
           <HubButton
             title="AO VIVO"
