@@ -15,7 +15,7 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-interface Ministry {
+interface Cell {
   id: string;
   name: string;
   description: string;
@@ -24,7 +24,6 @@ interface Ministry {
   category: string;
   modality: string;
   dayOfWeek: string;
-  // Adicione estas propriedades abaixo:
   time: string;
   location: string;
   leaderName: string;
@@ -33,66 +32,77 @@ interface Ministry {
   email: string;
 }
 
-const MINISTRIES_DATA: Ministry[] = [
+const CELLS_DATA: Cell[] = [
   {
     id: "1",
-    name: "Ministério de Louvor",
-    description: "Ensaio e alinhamento do grupo de louvor e adoração.",
+    name: "Célula dos Adolecentes",
+    description:
+      "Célual da UPA (União Presbiteriana de Adolescentes) para adolecentes entre 12 a 17 anos",
     category: "Música",
     modality: "Presencial",
-    dayOfWeek: "Quinta-feira & Domingo",
-    // Horário e Contatos Específicos do Louvor
-    time: "19:00 (Ensaio - Quinta-feira) | (EBD e Culto das 18:00 e 19:30 - Domingo)",
-    location: "Primeira Presbiteriana de Cabo Frio",
-    leaderName: "Carlos Eduardo",
+    dayOfWeek: "Quarta-feira",
+    time: "19:30",
+    location: "Informado semanalmente no grupo de WhatsApp",
+    leaderName: "Everson Tavares",
     leaderInitials: "CE",
     phone: "5522999999999",
-    email: "louvor@igreja.com",
+    email: "celulacentro@igreja.com",
   },
   {
     id: "2",
-    name: "Ministério de Comunicação",
-    description: `Este ministério é dividido em departamentos que são responsáveis pela comunicação visual da nossa igreja.\n\nNossos departamentos incluem os times de:\n\n • **Projeção:** Responsável pela exibição das letras e mídias durante o culto.\n• **Transmissão:** Responsável pela transmissão da ive do yotube duante o culto.\n• **Fotografia:** Responsável pelos registros fotográficos do culto e programações. \n• **Mídia:** Responsável pela criação de artes e vídeos para divulgação nas redes sociais da igreja.`,
+    name: "Célula dos Jovens",
+    description: `Célula da UMP (União da Mocidade Presbiteriana) para jovens entre 18 a 35 anos.`,
     category: "Jovens",
     modality: "Presencial",
-    dayOfWeek: "Primera Segunda-feira do mês",
-    // Horário e Contatos Específicos dos Jovens
+    dayOfWeek: "Primeira Segunda-feira do mês",
     time: "19:30",
-    location: "Primeira Presbiteriana de Cabo Frio",
+    location: "Informado semanalmente no grupo de WhatsApp",
     leaderName: "Larissa Dolenc",
     leaderInitials: "LA",
     phone: "5522988888888",
-    email: "jovens@igreja.com",
+    email: "celulaconectados@igreja.com",
   },
   {
     id: "3",
-    name: "Ministério Infantil",
-    description: "Cuidado e ensino bíblico voltado para crianças.",
-    category: "Infantil",
+    name: "Célula dos Homens",
+    description:
+      "Célula da UPH (União dos Homens Presbiterianos) para homens entre 36 a 60 anos.",
+    category: "Homens",
     modality: "Presencial",
-    dayOfWeek: "Domingo",
-    // Horário e Contatos Específicos das Crianças
-    time: "09:00 às 11:00",
-    location: "Sala Kids 01",
+    dayOfWeek: "Quarta-feira",
+    time: "19:00",
+    location: "Informado semanalmente no grupo de WhatsApp",
     leaderName: "Mariana Souza",
     leaderInitials: "MS",
     phone: "5522977777777",
-    email: "kids@igreja.com",
+    email: "celulainfantil@igreja.com",
+  },
+  {
+    id: "4",
+    name: "Célula das Mulheres (Lá em Casa)",
+    description:
+      "Célula da SAF (Socieade Feminia) para mulheres entre 36 a 60 anos.",
+    category: "Mulheres",
+    modality: "Presencial",
+    dayOfWeek: "Quarta-feira",
+    time: "19:30",
+    location: "Informado semanalmente no grupo de WhatsApp",
+    leaderName: "Mariana Souza",
+    leaderInitials: "MS",
+    phone: "5522977777777",
+    email: "celulainfantil@igreja.com",
   },
 ];
 
 const CATEGORIES_LIST = [
-  "3 Idade",
-  "Adultos",
-  "Crianças",
-  "Homens",
+  "Adolecentes",
   "Jovens",
-  "Jovens - Homens",
-  "Música",
-  "Infantil",
+  "Homens",
+  "Mulheres",
+  "Idosos",
 ];
 
-export default function MinistriesScreen() {
+export default function CellsScreen() {
   const router = useRouter();
   const [searchText, setSearchText] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -105,7 +115,7 @@ export default function MinistriesScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Filtra em tempo real por busca e por categoria
-  const filteredMinistries = MINISTRIES_DATA.filter((item) => {
+  const filteredCells = CELLS_DATA.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchText.toLowerCase()) ||
       item.description.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -119,7 +129,6 @@ export default function MinistriesScreen() {
   });
 
   const handleSelectCategory = (cat: string) => {
-    // Se clicar na mesma opção já selecionada no modal, desmarca
     if (tempSelectedCategory === cat) {
       setTempSelectedCategory(null);
     } else {
@@ -132,16 +141,15 @@ export default function MinistriesScreen() {
     setIsCategoryModalVisible(false);
   };
 
-  const handleOpenMinistryDetails = (item: Ministry) => {
+  const handleOpenCellDetails = (item: Cell) => {
     router.push({
-      pathname: "/ministries/ministerydetails",
+      pathname: "/cells/cellsdetails",
       params: {
         id: item.id,
         name: item.name,
         category: item.category,
         description: item.description,
         dayOfWeek: item.dayOfWeek,
-        // Adicione os campos abaixo para enviar os dados personalizados:
         time: item.time,
         location: item.location,
         leaderName: item.leaderName,
@@ -152,17 +160,17 @@ export default function MinistriesScreen() {
     });
   };
 
-  const renderMinistryItem = ({ item }: { item: Ministry }) => (
+  const renderCellItem = ({ item }: { item: Cell }) => (
     <TouchableOpacity
       style={styles.cardItem}
       activeOpacity={0.8}
-      onPress={() => handleOpenMinistryDetails(item)}
+      onPress={() => handleOpenCellDetails(item)}
     >
       {item.imageUrl ? (
         <Image source={{ uri: item.imageUrl }} style={styles.avatarImage} />
       ) : (
         <View style={styles.avatarPlaceholder}>
-          <Text style={styles.avatarText}>{item.initials || "MIN"}</Text>
+          <Text style={styles.avatarText}>{item.initials || "CEL"}</Text>
         </View>
       )}
 
@@ -204,7 +212,7 @@ export default function MinistriesScreen() {
         >
           <Ionicons name="chevron-back" size={26} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>MINISTÉRIOS</Text>
+        <Text style={styles.headerTitle}>CÉLULAS</Text>
         <View style={{ width: 26 }} />
       </View>
 
@@ -257,13 +265,13 @@ export default function MinistriesScreen() {
 
         {/* Lista de Cards */}
         <FlatList
-          data={filteredMinistries}
+          data={filteredCells}
           keyExtractor={(item) => item.id}
-          renderItem={renderMinistryItem}
+          renderItem={renderCellItem}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>Nenhum ministério encontrado.</Text>
+            <Text style={styles.emptyText}>Nenhuma célula encontrada.</Text>
           }
         />
       </View>
@@ -467,8 +475,6 @@ const styles = StyleSheet.create({
     marginTop: 30,
     fontSize: 14,
   },
-
-  /* Estilos do Modal / Bottom Sheet */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",

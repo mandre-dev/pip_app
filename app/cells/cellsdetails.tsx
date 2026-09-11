@@ -12,13 +12,13 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import Markdown from "react-native-markdown-display";
 
-export default function MinistryDetailsScreen() {
+export default function CellDetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  // Mapeamento dinâmico dos parâmetros recebidos via navegação
-  const ministry = {
-    name: (params.name as string) || "Ministério",
+  // Mapeamento dinâmico dos parâmetros recebidos via navegação para células
+  const cell = {
+    name: (params.name as string) || "Célula",
     category: (params.category as string) || "GERAL",
     description: (params.description as string) || "",
     dayOfWeek: (params.dayOfWeek as string) || "A definir",
@@ -31,15 +31,15 @@ export default function MinistryDetailsScreen() {
   };
 
   const handleCall = () => {
-    if (ministry.phone) Linking.openURL(`tel:${ministry.phone}`);
+    if (cell.phone) Linking.openURL(`tel:${cell.phone}`);
   };
 
   const handleWhatsApp = () => {
-    if (ministry.phone) Linking.openURL(`https://wa.me/${ministry.phone}`);
+    if (cell.phone) Linking.openURL(`https://wa.me/${cell.phone}`);
   };
 
   const handleEmail = () => {
-    if (ministry.email) Linking.openURL(`mailto:${ministry.email}`);
+    if (cell.email) Linking.openURL(`mailto:${cell.email}`);
   };
 
   return (
@@ -58,7 +58,7 @@ export default function MinistryDetailsScreen() {
         >
           <Ionicons name="chevron-back" size={26} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>MINISTÉRIOS</Text>
+        <Text style={styles.headerTitle}>CÉLULAS</Text>
         <View style={{ width: 26 }} />
       </View>
 
@@ -67,29 +67,29 @@ export default function MinistryDetailsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Título e Tag */}
-        <Text style={styles.ministryTitle}>{ministry.name}</Text>
+        <Text style={styles.cellTitle}>{cell.name}</Text>
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryBadgeText}>
-            {ministry.category.toUpperCase()}
+            {cell.category.toUpperCase()}
           </Text>
         </View>
 
         {/* Descrição em Markdown */}
-        {ministry.description ? (
-          <Markdown style={markdownStyles}>{ministry.description}</Markdown>
+        {cell.description ? (
+          <Markdown style={markdownStyles}>{cell.description}</Markdown>
         ) : null}
 
         {/* Seção de Reuniões */}
         <Text style={styles.sectionTitle}>Encontros</Text>
         <View style={styles.card}>
-          <Text style={styles.dayText}>{ministry.dayOfWeek}</Text>
+          <Text style={styles.dayText}>{cell.dayOfWeek}</Text>
 
           {/* Horário */}
           <View style={styles.infoRow}>
             <View style={styles.iconCircle}>
               <Ionicons name="time-outline" size={20} color="#02493D" />
             </View>
-            <Text style={styles.infoText}>{ministry.time}</Text>
+            <Text style={styles.infoText}>{cell.time}</Text>
           </View>
 
           <View style={styles.divider} />
@@ -99,7 +99,7 @@ export default function MinistryDetailsScreen() {
             <View style={styles.iconCircle}>
               <Ionicons name="location-outline" size={20} color="#02493D" />
             </View>
-            <Text style={styles.infoText}>{ministry.location}</Text>
+            <Text style={styles.infoText}>{cell.location}</Text>
           </View>
         </View>
 
@@ -114,14 +114,14 @@ export default function MinistryDetailsScreen() {
           {/* Avatar / Iniciais */}
           <View style={styles.leaderAvatarSmall}>
             <Text style={styles.leaderAvatarTextSmall}>
-              {ministry.leaderInitials}
+              {cell.leaderInitials}
             </Text>
           </View>
 
           {/* Nome e Cargo */}
           <View style={styles.leaderInfoCompact}>
             <Text style={styles.leaderNameCompact} numberOfLines={1}>
-              {ministry.leaderName}
+              {cell.leaderName}
             </Text>
             <Text style={styles.leaderRoleCompact}>Líder Responsável</Text>
           </View>
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 30,
   },
-  ministryTitle: {
+  cellTitle: {
     fontSize: 22,
     fontWeight: "700",
     color: "#FFF",

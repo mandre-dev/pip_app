@@ -66,13 +66,13 @@ export default function HomeScreen() {
           <HubButton
             title="DEVOCIONAL"
             iconName="newspaper-outline"
-            onPress={() => console.log("Devocional")}
+            onPress={() => router.push("/devotional")}
           />
 
           <HubButton
-            title="MENSAGENS"
+            title="CÉLULAS"
             iconName="play-circle-outline"
-            onPress={() => console.log("Mensagens")}
+            onPress={() => router.push("/cells")}
           />
           <HubButton
             title="DOAÇÃO"
