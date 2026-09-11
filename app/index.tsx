@@ -61,7 +61,7 @@ export default function HomeScreen() {
           <HubButton
             title="MINISTÉRIOS"
             iconName="flame-outline"
-            onPress={() => router.push("/ministerios")}
+            onPress={() => router.push("/ministries")}
           />
           <HubButton
             title="DEVOCIONAL"
