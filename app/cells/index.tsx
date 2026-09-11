@@ -3,15 +3,15 @@ import {
   StyleSheet,
   View,
   Text,
-  SafeAreaView,
-  TouchableOpacity,
   TextInput,
   FlatList,
   Image,
   Platform,
   Modal,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -37,7 +37,7 @@ const CELLS_DATA: Cell[] = [
     id: "1",
     name: "Célula dos Adolecentes",
     description:
-      "Célual da UPA (União Presbiteriana de Adolescentes) para adolecentes entre 12 a 17 anos",
+      "Célula da UPA (União Presbiteriana de Adolescentes) para adolescentes entre 12 a 17 anos",
     category: "Música",
     modality: "Presencial",
     dayOfWeek: "Quarta-feira",
@@ -81,7 +81,7 @@ const CELLS_DATA: Cell[] = [
     id: "4",
     name: "Célula das Mulheres (Lá em Casa)",
     description:
-      "Célula da SAF (Socieade Feminia) para mulheres entre 36 a 60 anos.",
+      "Célula da SAF (Sociedade Feminina) para mulheres entre 36 a 60 anos.",
     category: "Mulheres",
     modality: "Presencial",
     dayOfWeek: "Quarta-feira",
@@ -95,7 +95,7 @@ const CELLS_DATA: Cell[] = [
 ];
 
 const CATEGORIES_LIST = [
-  "Adolecentes",
+  "Adolescentes",
   "Jovens",
   "Homens",
   "Mulheres",
@@ -197,7 +197,7 @@ export default function CellsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -288,11 +288,7 @@ export default function CellsScreen() {
           activeOpacity={1}
           onPress={() => setIsCategoryModalVisible(false)}
         >
-          <TouchableOpacity
-            style={styles.modalContent}
-            activeOpacity={1}
-            onPress={(e) => e.stopPropagation()}
-          >
+          <View style={styles.modalContent}>
             <View style={styles.modalDragHandle} />
             <Text style={styles.modalTitle}>Categoria</Text>
 
@@ -329,7 +325,7 @@ export default function CellsScreen() {
             >
               <Text style={styles.applyButtonText}>Ver resultados</Text>
             </TouchableOpacity>
-          </TouchableOpacity>
+          </View>
         </TouchableOpacity>
       </Modal>
     </SafeAreaView>
@@ -346,7 +342,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 12,
   },
   backButton: {
     padding: 4,

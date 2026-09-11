@@ -2,11 +2,11 @@ import React from "react";
 import {
   StyleSheet,
   View,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Image,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../src/constants/theme";
@@ -17,7 +17,7 @@ export default function HomeScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header Superior */}
         <View style={styles.header}>
@@ -82,7 +82,7 @@ export default function HomeScreen() {
           <HubButton
             title="AO VIVO"
             iconName="videocam-outline"
-            onPress={() => console.log("Ao Vivo")}
+            onPress={() => router.push("/live" as any)}
           />
 
           <HubButton
@@ -138,8 +138,8 @@ const styles = StyleSheet.create({
     marginVertical: 15,
   },
   logo: {
-    width: 520,
-    height: 240,
+    width: 320,
+    height: 150,
   },
   grid: {
     flexDirection: "row",

@@ -3,7 +3,6 @@ import {
   StyleSheet,
   View,
   Text,
-  SafeAreaView,
   TouchableOpacity,
   TextInput,
   FlatList,
@@ -12,6 +11,7 @@ import {
   Modal,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -24,7 +24,6 @@ interface Ministry {
   category: string;
   modality: string;
   dayOfWeek: string;
-  // Adicione estas propriedades abaixo:
   time: string;
   location: string;
   leaderName: string;
@@ -41,7 +40,6 @@ const MINISTRIES_DATA: Ministry[] = [
     category: "Música",
     modality: "Presencial",
     dayOfWeek: "Quinta-feira & Domingo",
-    // Horário e Contatos Específicos do Louvor
     time: "19:00 (Ensaio - Quinta-feira) | (EBD e Culto das 18:00 e 19:30 - Domingo)",
     location: "Primeira Presbiteriana de Cabo Frio",
     leaderName: "Carlos Eduardo",
@@ -56,7 +54,6 @@ const MINISTRIES_DATA: Ministry[] = [
     category: "Jovens",
     modality: "Presencial",
     dayOfWeek: "Primera Segunda-feira do mês",
-    // Horário e Contatos Específicos dos Jovens
     time: "19:30",
     location: "Primeira Presbiteriana de Cabo Frio",
     leaderName: "Larissa Dolenc",
@@ -71,7 +68,6 @@ const MINISTRIES_DATA: Ministry[] = [
     category: "Infantil",
     modality: "Presencial",
     dayOfWeek: "Domingo",
-    // Horário e Contatos Específicos das Crianças
     time: "09:00 às 11:00",
     location: "Sala Kids 01",
     leaderName: "Mariana Souza",
@@ -119,7 +115,6 @@ export default function MinistriesScreen() {
   });
 
   const handleSelectCategory = (cat: string) => {
-    // Se clicar na mesma opção já selecionada no modal, desmarca
     if (tempSelectedCategory === cat) {
       setTempSelectedCategory(null);
     } else {
@@ -141,7 +136,6 @@ export default function MinistriesScreen() {
         category: item.category,
         description: item.description,
         dayOfWeek: item.dayOfWeek,
-        // Adicione os campos abaixo para enviar os dados personalizados:
         time: item.time,
         location: item.location,
         leaderName: item.leaderName,
@@ -189,7 +183,7 @@ export default function MinistriesScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -338,7 +332,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 12,
   },
   backButton: {
     padding: 4,
@@ -467,8 +461,6 @@ const styles = StyleSheet.create({
     marginTop: 30,
     fontSize: 14,
   },
-
-  /* Estilos do Modal / Bottom Sheet */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",

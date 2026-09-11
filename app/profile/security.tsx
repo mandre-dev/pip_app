@@ -3,7 +3,6 @@ import {
   StyleSheet,
   View,
   Text,
-  SafeAreaView,
   TouchableOpacity,
   TextInput,
   ScrollView,
@@ -12,6 +11,7 @@ import {
   ActivityIndicator,
   Modal,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -128,7 +128,7 @@ export default function SecurityScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       {Platform.OS === "web" && (
         <style type="text/css">{`
           input:focus {
@@ -347,23 +347,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: "#1E796A",
+    paddingVertical: 12,
   },
   backButton: {
     padding: 4,
   },
   headerTitle: {
-    fontSize: 15,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "700",
     color: "#FFF",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingTop: 30,
+    paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 24,
   },
   mainContent: {

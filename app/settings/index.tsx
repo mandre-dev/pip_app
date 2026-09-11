@@ -3,7 +3,6 @@ import {
   StyleSheet,
   View,
   Text,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -12,6 +11,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -103,12 +103,11 @@ export default function SettingsScreen() {
       setPassword("");
       setShowPassword(false);
 
-      // Redireciona para a rota do login (ajuste a rota caso sua tela inicial seja "/")
+      // Redireciona para a rota do login
       router.replace("/login");
     } catch (error: any) {
       console.error("Erro ao excluir conta:", error.code, error.message);
 
-      // O erro do modal é mantido visível sem fechar a janela pop-up
       if (
         error.code === "auth/wrong-password" ||
         error.code === "auth/invalid-credential"
@@ -137,7 +136,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity

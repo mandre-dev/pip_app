@@ -3,7 +3,6 @@ import {
   StyleSheet,
   View,
   Text,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Image,
@@ -11,6 +10,7 @@ import {
   Linking,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -76,8 +76,8 @@ export default function AboutUsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header Transparente */}
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+      {/* Header Fixo e Seguro */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -204,18 +204,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#02493D",
   },
   header: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: "transparent",
+    paddingVertical: 12,
+    backgroundColor: "#02493D",
     zIndex: 10,
-    elevation: 10,
   },
   backButton: {
     padding: 4,
@@ -279,13 +274,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#1E796A",
     marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#888",
-    letterSpacing: 1,
-    marginBottom: 16,
   },
   paragraph: {
     fontSize: 15,

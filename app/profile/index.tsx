@@ -3,7 +3,6 @@ import {
   StyleSheet,
   View,
   Text,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -11,6 +10,7 @@ import {
   Modal,
   Image,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { auth, db } from "../../src/config/firebase";
@@ -87,7 +87,10 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, styles.center]}>
+      <SafeAreaView
+        style={[styles.container, styles.center]}
+        edges={["top", "bottom"]}
+      >
         <ActivityIndicator size="large" color="#02493D" />
       </SafeAreaView>
     );
@@ -96,7 +99,7 @@ export default function ProfileScreen() {
   const userEmail = user?.email || "email@exemplo.com";
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       {/* Header com botão de voltar */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -109,7 +112,10 @@ export default function ProfileScreen() {
         <View style={{ width: 26 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.mainContent}>
           {/* Avatar e Informações do Usuário Atual */}
           <View style={styles.userInfoContainer}>
@@ -226,8 +232,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: "#1E796A",
+    paddingVertical: 12,
   },
   backButton: {
     padding: 4,
@@ -236,12 +241,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FFF",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "space-between",
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 24,
   },
   mainContent: {

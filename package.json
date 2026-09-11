@@ -16,6 +16,7 @@
     "expo-symbols": "~57.0.2",
     "expo-web-browser": "~57.0.2",
     "firebase": "^12.18.0",
+    "punycode": "^2.3.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-easy-crop": "^6.2.3",
@@ -25,7 +26,9 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.10.1"
+    "react-native-webview": "13.16.1",
+    "react-native-worklets": "0.10.1",
+    "react-native-youtube-iframe": "^2.4.1"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
