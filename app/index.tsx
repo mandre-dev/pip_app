@@ -88,7 +88,7 @@ export default function HomeScreen() {
           <HubButton
             title="EBD"
             iconName="journal-outline"
-            onPress={() => router.push("/oracao")}
+            onPress={() => router.push("/ebd" as any)}
           />
           <HubButton
             title="PEDIDOS DE ORAÇÃO"

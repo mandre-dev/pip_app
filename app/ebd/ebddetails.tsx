@@ -13,34 +13,59 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import Markdown from "react-native-markdown-display";
 
-export default function CellDetailsScreen() {
+interface Leader {
+  name: string;
+  initials: string;
+  phone: string;
+  email: string;
+}
+
+export default function EbdDetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  // Mapeamento dinâmico dos parâmetros recebidos via navegação para células
-  const cell = {
-    name: (params.name as string) || "Célula",
+  // Tratativa para ler os múltiplos líderes passados via parâmetro
+  let parsedLeaders: Leader[] = [];
+  try {
+    if (params.leaders) {
+      parsedLeaders = JSON.parse(params.leaders as string);
+    }
+  } catch (e) {
+    parsedLeaders = [];
+  }
+
+  // Fallback caso venha vazio ou no formato antigo de parâmetros únicos
+  const leaders =
+    parsedLeaders.length > 0
+      ? parsedLeaders
+      : [
+          {
+            name: (params.leaderName as string) || "Professor Responsável",
+            initials: (params.leaderInitials as string) || "P",
+            phone: (params.phone as string) || "",
+            email: (params.email as string) || "",
+          },
+        ];
+
+  const ebd = {
+    name: (params.name as string) || "Classe EBD",
     category: (params.category as string) || "GERAL",
     description: (params.description as string) || "",
     dayOfWeek: (params.dayOfWeek as string) || "A definir",
     time: (params.time as string) || "Horário a combinar",
     location: (params.location as string) || "Local a definir",
-    leaderName: (params.leaderName as string) || "Líder Responsável",
-    leaderInitials: (params.leaderInitials as string) || "L",
-    phone: (params.phone as string) || "",
-    email: (params.email as string) || "",
   };
 
-  const handleCall = () => {
-    if (cell.phone) Linking.openURL(`tel:${cell.phone}`);
+  const handleCall = (phone: string) => {
+    if (phone) Linking.openURL(`tel:${phone}`);
   };
 
-  const handleWhatsApp = () => {
-    if (cell.phone) Linking.openURL(`https://wa.me/${cell.phone}`);
+  const handleWhatsApp = (phone: string) => {
+    if (phone) Linking.openURL(`https://wa.me/${phone}`);
   };
 
-  const handleEmail = () => {
-    if (cell.email) Linking.openURL(`mailto:${cell.email}`);
+  const handleEmail = (email: string) => {
+    if (email) Linking.openURL(`mailto:${email}`);
   };
 
   return (
@@ -61,7 +86,7 @@ export default function CellDetailsScreen() {
         >
           <Ionicons name="chevron-back" size={26} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>MINISTÉRIOS</Text>
+        <Text style={styles.headerTitle}>EBD</Text>
         <View style={{ width: 26 }} />
       </View>
 
@@ -70,29 +95,29 @@ export default function CellDetailsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Título e Tag */}
-        <Text style={styles.cellTitle}>{cell.name}</Text>
+        <Text style={styles.ebdTitle}>{ebd.name}</Text>
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryBadgeText}>
-            {cell.category.toUpperCase()}
+            {ebd.category.toUpperCase()}
           </Text>
         </View>
 
         {/* Descrição em Markdown */}
-        {cell.description ? (
-          <Markdown style={markdownStyles}>{cell.description}</Markdown>
+        {ebd.description ? (
+          <Markdown style={markdownStyles}>{ebd.description}</Markdown>
         ) : null}
 
         {/* Seção de Reuniões */}
         <Text style={styles.sectionTitle}>Encontros</Text>
         <View style={styles.card}>
-          <Text style={styles.dayText}>{cell.dayOfWeek}</Text>
+          <Text style={styles.dayText}>{ebd.dayOfWeek}</Text>
 
           {/* Horário */}
           <View style={styles.infoRow}>
             <View style={styles.iconCircle}>
               <Ionicons name="time-outline" size={20} color="#02493D" />
             </View>
-            <Text style={styles.infoText}>{cell.time}</Text>
+            <Text style={styles.infoText}>{ebd.time}</Text>
           </View>
 
           <View style={styles.divider} />
@@ -102,7 +127,7 @@ export default function CellDetailsScreen() {
             <View style={styles.iconCircle}>
               <Ionicons name="location-outline" size={20} color="#02493D" />
             </View>
-            <Text style={styles.infoText}>{cell.location}</Text>
+            <Text style={styles.infoText}>{ebd.location}</Text>
           </View>
         </View>
 
@@ -112,47 +137,51 @@ export default function CellDetailsScreen() {
           Caso deseje participar entre em contato com a liderança
         </Text>
 
-        {/* Card Compacto da Liderança */}
-        <View style={styles.leaderCardCompact}>
-          {/* Avatar / Iniciais */}
-          <View style={styles.leaderAvatarSmall}>
-            <Text style={styles.leaderAvatarTextSmall}>
-              {cell.leaderInitials}
-            </Text>
+        {/* Mapeamento dos múltiplos líderes/professores */}
+        {leaders.map((leader, index) => (
+          <View key={index} style={styles.leaderCardCompact}>
+            {/* Avatar / Iniciais */}
+            <View style={styles.leaderAvatarSmall}>
+              <Text style={styles.leaderAvatarTextSmall}>
+                {leader.initials}
+              </Text>
+            </View>
+
+            {/* Nome e Cargo */}
+            <View style={styles.leaderInfoCompact}>
+              <Text style={styles.leaderNameCompact} numberOfLines={1}>
+                {leader.name}
+              </Text>
+              <Text style={styles.leaderRoleCompact}>
+                Professor Responsável
+              </Text>
+            </View>
+
+            {/* Ações de Contato em Linha */}
+            <View style={styles.contactActionsCompact}>
+              <TouchableOpacity
+                style={styles.actionButtonSmall}
+                onPress={() => handleCall(leader.phone)}
+              >
+                <Ionicons name="call-outline" size={16} color="#02493D" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionButtonSmall}
+                onPress={() => handleWhatsApp(leader.phone)}
+              >
+                <FontAwesome name="whatsapp" size={16} color="#02493D" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionButtonSmall}
+                onPress={() => handleEmail(leader.email)}
+              >
+                <Ionicons name="mail-outline" size={16} color="#02493D" />
+              </TouchableOpacity>
+            </View>
           </View>
-
-          {/* Nome e Cargo */}
-          <View style={styles.leaderInfoCompact}>
-            <Text style={styles.leaderNameCompact} numberOfLines={1}>
-              {cell.leaderName}
-            </Text>
-            <Text style={styles.leaderRoleCompact}>Líder Responsável</Text>
-          </View>
-
-          {/* Ações de Contato em Linha */}
-          <View style={styles.contactActionsCompact}>
-            <TouchableOpacity
-              style={styles.actionButtonSmall}
-              onPress={handleCall}
-            >
-              <Ionicons name="call-outline" size={16} color="#02493D" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButtonSmall}
-              onPress={handleWhatsApp}
-            >
-              <FontAwesome name="whatsapp" size={16} color="#02493D" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButtonSmall}
-              onPress={handleEmail}
-            >
-              <Ionicons name="mail-outline" size={16} color="#02493D" />
-            </TouchableOpacity>
-          </View>
-        </View>
+        ))}
       </ScrollView>
     </View>
   );
@@ -202,7 +231,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 40,
   },
-  cellTitle: {
+  ebdTitle: {
     fontSize: 22,
     fontWeight: "700",
     color: "#FFF",
@@ -277,7 +306,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 12,
   },
   leaderAvatarSmall: {
     width: 42,
