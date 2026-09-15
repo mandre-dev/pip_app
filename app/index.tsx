@@ -1,17 +1,16 @@
-import React from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import {
-  StyleSheet,
-  View,
-  ScrollView,
-  TouchableOpacity,
   Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { COLORS } from "../src/constants/theme";
 import { HubButton } from "../src/components/HubButton";
 import { auth } from "../src/config/firebase";
+import { COLORS } from "../src/constants/theme";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -93,7 +92,7 @@ export default function HomeScreen() {
           <HubButton
             title="PEDIDOS DE ORAÇÃO"
             iconName="book-outline"
-            onPress={() => console.log("Plano de Oração")}
+            onPress={() => router.push("/prayerrequest")}
           />
           <HubButton
             title="EVENTOS"
