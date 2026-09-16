@@ -5,7 +5,6 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Alert,
   Modal,
   Linking,
   TextInput,
@@ -52,6 +51,11 @@ export default function SettingsScreen() {
 
   const handleOpenDevLink = (url: string) => {
     Linking.openURL(url);
+  };
+
+  const handleOpenOfficialChannels = () => {
+    // Redireciona para a tela interna "officialchannels"
+    router.push("/settings/officialchannels" as any);
   };
 
   // Exclusão de Conta com Reautenticação e Redirecionamento Direto
@@ -212,6 +216,25 @@ export default function SettingsScreen() {
                 <Ionicons name="code-slash-outline" size={22} color="#1E796A" />
               </View>
               <Text style={styles.cardTitle}>Sobre o Desenvolvedor</Text>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={COLORS.primaryMedium}
+            />
+          </TouchableOpacity>
+
+          {/* Card: Canais Oficiais */}
+          <TouchableOpacity
+            style={styles.menuCard}
+            activeOpacity={0.8}
+            onPress={handleOpenOfficialChannels}
+          >
+            <View style={styles.cardLeft}>
+              <View style={styles.iconWrapper}>
+                <Ionicons name="globe-outline" size={22} color="#1E796A" />
+              </View>
+              <Text style={styles.cardTitle}>Canais oficiais</Text>
             </View>
             <Ionicons
               name="chevron-forward"
