@@ -1,19 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import {
-  Animated,
-  FlatList,
-  Modal,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Animated,
+    FlatList,
+    Modal,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth, db } from "../../src/config/firebase";
@@ -35,6 +35,9 @@ interface PrayerRequest {
 
 const STORAGE_KEY = "@prayer_requests_list_v5";
 const CURRENT_USER_EMAIL_KEY = "@current_user_email"; // E-mail da conta atualmente logada no app
+
+const getPrayerRequestsDoc = (uid?: string | null) =>
+  uid ? doc(db, "users", uid, "appState", "prayerRequests") : null;
 
 const normalizeEmail = (value?: string | null) =>
   value?.trim().toLowerCase() || "";
@@ -125,6 +128,36 @@ export default function PrayerRequestsScreen() {
 
         setCurrentLoggedName(resolvedName);
         await AsyncStorage.setItem(CURRENT_USER_EMAIL_KEY, userEmail);
+
+        const prayerDoc = getPrayerRequestsDoc(currentUser.uid);
+        if (prayerDoc) {
+          const prayerSnapshot = await getDoc(prayerDoc);
+          if (prayerSnapshot.exists()) {
+            const legacyList = prayerSnapshot.data()?.items;
+            if (Array.isArray(legacyList)) {
+              setPrayerList(legacyList);
+            } else {
+              setPrayerList([]);
+            }
+          } else {
+            const storedPrayers = await AsyncStorage.getItem(STORAGE_KEY);
+            if (storedPrayers) {
+              const parsed: PrayerRequest[] = JSON.parse(storedPrayers);
+              const list = Array.isArray(parsed) ? parsed : [];
+              setPrayerList(list);
+              await setDoc(
+                prayerDoc,
+                {
+                  items: list,
+                  updatedAt: new Date().toISOString(),
+                },
+                { merge: true },
+              );
+            } else {
+              setPrayerList([]);
+            }
+          }
+        }
       } else {
         const storedUserEmail = await AsyncStorage.getItem(
           CURRENT_USER_EMAIL_KEY,
@@ -134,14 +167,14 @@ export default function PrayerRequestsScreen() {
         } else {
           setCurrentLoggedEmail("");
         }
-      }
 
-      const storedPrayers = await AsyncStorage.getItem(STORAGE_KEY);
-      if (storedPrayers) {
-        const parsed: PrayerRequest[] = JSON.parse(storedPrayers);
-        setPrayerList(Array.isArray(parsed) ? parsed : []);
-      } else {
-        setPrayerList([]);
+        const storedPrayers = await AsyncStorage.getItem(STORAGE_KEY);
+        if (storedPrayers) {
+          const parsed: PrayerRequest[] = JSON.parse(storedPrayers);
+          setPrayerList(Array.isArray(parsed) ? parsed : []);
+        } else {
+          setPrayerList([]);
+        }
       }
     } catch (error) {
       console.log("Erro ao carregar dados", error);
@@ -150,6 +183,21 @@ export default function PrayerRequestsScreen() {
 
   const savePrayers = async (newList: PrayerRequest[]) => {
     try {
+      const uid = auth.currentUser?.uid;
+      if (uid) {
+        const prayerDoc = getPrayerRequestsDoc(uid);
+        if (prayerDoc) {
+          await setDoc(
+            prayerDoc,
+            {
+              items: newList,
+              updatedAt: new Date().toISOString(),
+            },
+            { merge: true },
+          );
+        }
+      }
+
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newList));
     } catch (error) {
       console.log("Erro ao salvar", error);

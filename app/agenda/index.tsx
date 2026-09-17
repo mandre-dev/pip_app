@@ -1,18 +1,25 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Easing,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Animated,
+  Easing,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { auth, db } from "../../src/config/firebase";
 
 const MONTHS = [
   "Janeiro",
@@ -76,6 +83,12 @@ interface NotificationItem {
 
 const STORAGE_KEY = "agenda_notifications_by_date";
 
+const getAgendaNotificationsDoc = (userId?: string | null) =>
+  userId ? doc(db, "users", userId, "appState", "agendaNotifications") : null;
+
+const getUserStorageKey = (userId?: string | null) =>
+  `${STORAGE_KEY}:${userId ?? "anonymous"}`;
+
 export default function AgendaScreen() {
   const router = useRouter();
   const [currentMonthIndex, setCurrentMonthIndex] = useState(8);
@@ -101,44 +114,129 @@ export default function AgendaScreen() {
   });
   const [notifHour, setNotifHour] = useState("00");
   const [notifMinute, setNotifMinute] = useState("00");
+  const [editingNotificationId, setEditingNotificationId] = useState<
+    string | null
+  >(null);
 
   const [pickerMode, setPickerMode] = useState<"calendar" | "time" | null>(
     null,
   );
   const [tempCalendarMonth, setTempCalendarMonth] = useState(8);
+  const [userId, setUserId] = useState<string | null>(
+    auth.currentUser?.uid ?? null,
+  );
+  const isExpoGo = Constants.appOwnership === "expo";
+
+  useEffect(() => {
+    if (isExpoGo) {
+      return;
+    }
+
+    const Notifications =
+      require("expo-notifications") as typeof import("expo-notifications");
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  }, [isExpoGo]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      const nextUserId = user?.uid ?? null;
+      setUserId(nextUserId);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const loadNotifications = async () => {
       try {
-        const saved = await AsyncStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved) as Record<
-            string,
-            NotificationItem[]
-          >;
-          if (parsed && typeof parsed === "object") {
-            setNotifications(parsed);
+        if (!userId) {
+          setNotifications({});
+          return;
+        }
+
+        const agendaDoc = getAgendaNotificationsDoc(userId);
+        if (agendaDoc) {
+          const snapshot = await getDoc(agendaDoc);
+          if (snapshot.exists()) {
+            const parsed = snapshot.data()?.items as
+              | Record<string, NotificationItem[]>
+              | undefined;
+            if (parsed && typeof parsed === "object") {
+              setNotifications(parsed);
+              return;
+            }
+          }
+
+          const storageKey = getUserStorageKey(userId);
+          const legacySaved = await AsyncStorage.getItem(storageKey);
+          if (legacySaved) {
+            const parsed = JSON.parse(legacySaved) as Record<
+              string,
+              NotificationItem[]
+            >;
+            if (parsed && typeof parsed === "object") {
+              setNotifications(parsed);
+              await setDoc(
+                agendaDoc,
+                {
+                  items: parsed,
+                  updatedAt: new Date().toISOString(),
+                },
+                { merge: true },
+              );
+              return;
+            }
           }
         }
+
+        setNotifications({});
       } catch (error) {
         console.warn("Erro ao carregar notificações salvas:", error);
       }
     };
 
-    loadNotifications();
-  }, []);
+    if (userId !== undefined) {
+      loadNotifications();
+    }
+  }, [userId]);
 
   useEffect(() => {
     const saveNotifications = async () => {
       try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+        if (!userId) {
+          return;
+        }
+
+        const agendaDoc = getAgendaNotificationsDoc(userId);
+        if (agendaDoc) {
+          await setDoc(
+            agendaDoc,
+            {
+              items: notifications,
+              updatedAt: new Date().toISOString(),
+            },
+            { merge: true },
+          );
+        }
+
+        const storageKey = getUserStorageKey(userId);
+        await AsyncStorage.setItem(storageKey, JSON.stringify(notifications));
       } catch (error) {
         console.warn("Erro ao salvar notificações:", error);
       }
     };
 
-    saveNotifications();
-  }, [notifications]);
+    if (userId !== null) {
+      saveNotifications();
+    }
+  }, [notifications, userId]);
 
   // Animação do círculo girando
   const spinValue = useRef(new Animated.Value(0)).current;
@@ -263,6 +361,7 @@ export default function AgendaScreen() {
   const handleOpenModal = () => {
     setModalStep("confirm");
     setPickerMode(null);
+    setEditingNotificationId(null);
     setIsModalVisible(true);
   };
 
@@ -270,6 +369,7 @@ export default function AgendaScreen() {
     setIsModalVisible(false);
     setModalStep("confirm");
     setPickerMode(null);
+    setEditingNotificationId(null);
   };
 
   const getNotificationDateKey = (
@@ -301,6 +401,7 @@ export default function AgendaScreen() {
   );
 
   const currentDateNotifications = notifications[selectedDateKey] ?? [];
+  const selectedDateNotificationCount = currentDateNotifications.length;
 
   const handleSaveNotification = () => {
     const dateKey = getNotificationDateKey(
@@ -308,6 +409,23 @@ export default function AgendaScreen() {
       notifDate.monthIndex,
       notifDate.year,
     );
+
+    const existingForDate = notifications[dateKey] ?? [];
+    const hasDuplicateTime = existingForDate.some(
+      (item) =>
+        item.id !== editingNotificationId &&
+        item.hour === notifHour &&
+        item.minute === notifMinute,
+    );
+
+    if (hasDuplicateTime) {
+      Alert.alert(
+        "Notificação duplicada",
+        "Já existe uma notificação para esta data neste mesmo horário.",
+      );
+      setModalStep("options");
+      return;
+    }
 
     const timestamp = new Date(
       notifDate.year,
@@ -318,7 +436,7 @@ export default function AgendaScreen() {
     ).getTime();
 
     const newNotification: NotificationItem = {
-      id: Math.random().toString(),
+      id: editingNotificationId ?? Math.random().toString(),
       title: getHolidayNameForDate(notifDate.day, notifDate.monthIndex),
       day: notifDate.day,
       monthIndex: notifDate.monthIndex,
@@ -329,18 +447,102 @@ export default function AgendaScreen() {
     };
 
     setNotifications((prev) => {
-      const existing = prev[dateKey] ?? [];
+      const next = { ...prev };
+
+      if (editingNotificationId) {
+        Object.keys(next).forEach((key) => {
+          const remaining = next[key].filter(
+            (item) => item.id !== editingNotificationId,
+          );
+
+          if (remaining.length === 0) {
+            delete next[key];
+          } else {
+            next[key] = remaining;
+          }
+        });
+      }
+
+      const existing = next[dateKey] ?? [];
       const updated = [...existing, newNotification].sort(
         (a, b) => a.timestamp - b.timestamp,
       );
 
       return {
-        ...prev,
+        ...next,
         [dateKey]: updated,
       };
     });
 
+    setEditingNotificationId(null);
     setModalStep("loading");
+  };
+
+  const handleEditNotification = (item: NotificationItem) => {
+    setEditingNotificationId(item.id);
+    setNotifDate({
+      day: item.day,
+      monthIndex: item.monthIndex,
+      year: item.year,
+    });
+    setTempCalendarMonth(item.monthIndex);
+    setNotifHour(item.hour);
+    setNotifMinute(item.minute);
+    setPickerMode(null);
+    setModalStep("createNotification");
+  };
+
+  const handlePreviewNotification = async (item: NotificationItem) => {
+    if (isExpoGo) {
+      Alert.alert(
+        "Teste disponível na build do app",
+        "O Expo Go não oferece suporte a este recurso no Android. Use uma development build para disparar a notificação de teste.",
+      );
+      return;
+    }
+
+    try {
+      const Notifications =
+        require("expo-notifications") as typeof import("expo-notifications");
+
+      if (Platform.OS === "android") {
+        await Notifications.setNotificationChannelAsync("agenda-events", {
+          name: "Eventos da agenda",
+          importance: Notifications.AndroidImportance.HIGH,
+        });
+      }
+
+      const permissions = await Notifications.getPermissionsAsync();
+      let status = permissions.status;
+
+      if (status !== "granted") {
+        const requested = await Notifications.requestPermissionsAsync();
+        status = requested.status;
+      }
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissão necessária",
+          "Permita as notificações para visualizar o teste no dispositivo.",
+        );
+        return;
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: item.title,
+          body: `Visualização teste\n${item.day} de ${MONTHS_SHORT[item.monthIndex]} - ${item.hour}:${item.minute}`,
+          data: { notificationId: item.id },
+        },
+        trigger: null,
+      });
+    } catch (error) {
+      console.warn("Erro ao exibir a notificação de teste:", error);
+      Alert.alert(
+        "Não foi possível exibir o teste",
+        "Tente novamente em um dispositivo compatível com notificações.",
+      );
+    }
   };
 
   const handleRemoveNotification = (id: string) => {
@@ -511,17 +713,29 @@ export default function AgendaScreen() {
           </View>
 
           {currentSelectedHoliday && (
-            <TouchableOpacity
-              style={styles.bellButton}
-              onPress={handleOpenModal}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="notifications-outline"
-                size={22}
-                color="#02493D"
-              />
-            </TouchableOpacity>
+            <View style={styles.bellButtonWrapper}>
+              <TouchableOpacity
+                style={styles.bellButton}
+                onPress={handleOpenModal}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="notifications-outline"
+                  size={22}
+                  color="#02493D"
+                />
+              </TouchableOpacity>
+
+              {selectedDateNotificationCount > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>
+                    {selectedDateNotificationCount > 9
+                      ? "9+"
+                      : selectedDateNotificationCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           )}
         </View>
       </ScrollView>
@@ -583,6 +797,7 @@ export default function AgendaScreen() {
                   <TouchableOpacity
                     style={styles.modalOptionButton}
                     onPress={() => {
+                      setEditingNotificationId(null);
                       setNotifDate({
                         day: selectedDay,
                         monthIndex: currentMonthIndex,
@@ -667,17 +882,44 @@ export default function AgendaScreen() {
                           </View>
                         </View>
 
-                        <TouchableOpacity
-                          style={styles.trashButton}
-                          onPress={() => handleRemoveNotification(item.id)}
-                          activeOpacity={0.8}
-                        >
-                          <Ionicons
-                            name="trash-outline"
-                            size={16}
-                            color="#DC2626"
-                          />
-                        </TouchableOpacity>
+                        <View style={styles.notificationActions}>
+                          <TouchableOpacity
+                            style={styles.previewButton}
+                            onPress={() => handlePreviewNotification(item)}
+                            activeOpacity={0.8}
+                            accessibilityLabel="Visualizar notificação de teste"
+                          >
+                            <Ionicons
+                              name="eye-outline"
+                              size={17}
+                              color="#02493D"
+                            />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.editButton}
+                            onPress={() => handleEditNotification(item)}
+                            activeOpacity={0.8}
+                            accessibilityLabel="Editar notificação"
+                          >
+                            <Ionicons
+                              name="pencil-outline"
+                              size={16}
+                              color="#02493D"
+                            />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.trashButton}
+                            onPress={() => handleRemoveNotification(item.id)}
+                            activeOpacity={0.8}
+                            accessibilityLabel="Excluir notificação"
+                          >
+                            <Ionicons
+                              name="trash-outline"
+                              size={16}
+                              color="#DC2626"
+                            />
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     ))
                   )}
@@ -735,7 +977,7 @@ export default function AgendaScreen() {
             {modalStep === "createNotification" && (
               <View style={{ width: "100%" }}>
                 <Text style={styles.createEventNameTitle}>
-                  {currentSelectedHoliday || "Evento da Agenda"}
+                  {getHolidayNameForDate(notifDate.day, notifDate.monthIndex)}
                 </Text>
 
                 <View style={styles.dateTimeBarContainer}>
@@ -1083,7 +1325,9 @@ export default function AgendaScreen() {
                       onPress={handleSaveNotification}
                       activeOpacity={0.8}
                     >
-                      <Text style={styles.modalButtonYesText}>Salvar</Text>
+                      <Text style={styles.modalButtonYesText}>
+                        {editingNotificationId ? "Salvar alterações" : "Salvar"}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -1249,6 +1493,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 4,
   },
+  bellButtonWrapper: {
+    position: "relative",
+  },
   bellButton: {
     width: 42,
     height: 42,
@@ -1258,6 +1505,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderColor: "#E5E7EB",
+  },
+  notificationBadge: {
+    position: "absolute",
+    right: -6,
+    top: -6,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#DC2626",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+    borderWidth: 2,
+    borderColor: "#FFF",
+  },
+  notificationBadgeText: {
+    color: "#FFF",
+    fontSize: 11,
+    fontWeight: "700",
+    textAlign: "center",
   },
   modalOverlay: {
     flex: 1,
@@ -1396,6 +1663,27 @@ const styles = StyleSheet.create({
   notifItemSub: {
     color: "#4B5563",
     fontSize: 11,
+  },
+  notificationActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  previewButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "#E0F2EE",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  editButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "#E0F2EE",
+    alignItems: "center",
+    justifyContent: "center",
   },
   trashButton: {
     width: 32,

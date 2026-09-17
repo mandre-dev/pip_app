@@ -1,27 +1,27 @@
-import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Modal,
-  Linking,
-  TextInput,
-  ActivityIndicator,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { auth, db } from "@/src/config/firebase";
+import { COLORS } from "@/src/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import {
   deleteUser,
   EmailAuthProvider,
   reauthenticateWithCredential,
   signOut,
 } from "firebase/auth";
-import { doc, deleteDoc } from "firebase/firestore";
-import { auth, db } from "@/src/config/firebase";
-import { COLORS } from "@/src/constants/theme";
+import { deleteDoc, doc } from "firebase/firestore";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Linking,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: "#1E796A",
+    backgroundColor: "#02493D",
   },
   backButton: {
     padding: 4,
@@ -582,10 +582,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   closeDevButton: {
-    paddingVertical: 10,
+    width: "100%",
+    backgroundColor: "#E0E0E0",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
   closeDevButtonText: {
-    color: "#666",
+    color: "#333",
     fontWeight: "600",
     fontSize: 14,
   },
