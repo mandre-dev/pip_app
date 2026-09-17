@@ -38,7 +38,7 @@ const CELLS_DATA: Cell[] = [
     name: "Célula dos Adolecentes",
     description:
       "Célula da UPA (União Presbiteriana de Adolescentes) para adolescentes entre 12 a 17 anos",
-    category: "Música",
+    category: "Adolescentes",
     modality: "Presencial",
     dayOfWeek: "Quarta-feira",
     time: "19:30",
@@ -107,14 +107,14 @@ export default function CellsScreen() {
   const [searchText, setSearchText] = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
-  // Estados do Modal de Filtro
+  // Estados do Modal de Filtro (Múltipla escolha com Arrays)
   const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
-  const [tempSelectedCategory, setTempSelectedCategory] = useState<
-    string | null
-  >(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [tempSelectedCategories, setTempSelectedCategories] = useState<
+    string[]
+  >([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
-  // Filtra em tempo real por busca e por categoria
+  // Filtra em tempo real por busca e por múltiplas categorias
   const filteredCells = CELLS_DATA.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -122,22 +122,26 @@ export default function CellsScreen() {
       item.category.toLowerCase().includes(searchText.toLowerCase());
 
     const matchesCategory =
-      !selectedCategory ||
-      item.category.toLowerCase() === selectedCategory.toLowerCase();
+      selectedCategories.length === 0 ||
+      selectedCategories.some(
+        (cat) => cat.toLowerCase() === item.category.toLowerCase(),
+      );
 
     return matchesSearch && matchesCategory;
   });
 
   const handleSelectCategory = (cat: string) => {
-    if (tempSelectedCategory === cat) {
-      setTempSelectedCategory(null);
+    if (tempSelectedCategories.includes(cat)) {
+      setTempSelectedCategories(
+        tempSelectedCategories.filter((c) => c !== cat),
+      );
     } else {
-      setTempSelectedCategory(cat);
+      setTempSelectedCategories([...tempSelectedCategories, cat]);
     }
   };
 
   const handleApplyCategoryFilter = () => {
-    setSelectedCategory(tempSelectedCategory);
+    setSelectedCategories(tempSelectedCategories);
     setIsCategoryModalVisible(false);
   };
 
@@ -249,15 +253,17 @@ export default function CellsScreen() {
           <TouchableOpacity
             style={[
               styles.filterChip,
-              !!selectedCategory && styles.filterChipActive,
+              selectedCategories.length > 0 && styles.filterChipActive,
             ]}
             onPress={() => {
-              setTempSelectedCategory(selectedCategory);
+              setTempSelectedCategories(selectedCategories);
               setIsCategoryModalVisible(true);
             }}
           >
             <Text style={styles.filterText}>
-              {selectedCategory ? selectedCategory : "Categoria"}
+              {selectedCategories.length > 0
+                ? `Categoria (${selectedCategories.length})`
+                : "Categoria"}
             </Text>
             <Ionicons name="chevron-down-outline" size={14} color="#1E796A" />
           </TouchableOpacity>
@@ -288,16 +294,20 @@ export default function CellsScreen() {
           activeOpacity={1}
           onPress={() => setIsCategoryModalVisible(false)}
         >
-          <View style={styles.modalContent}>
+          <TouchableOpacity
+            style={styles.modalContent}
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.modalDragHandle} />
-            <Text style={styles.modalTitle}>Categoria</Text>
+            <Text style={styles.modalTitle}>Categorias</Text>
 
             <ScrollView
               style={styles.optionsList}
               showsVerticalScrollIndicator={false}
             >
               {CATEGORIES_LIST.map((cat) => {
-                const isSelected = tempSelectedCategory === cat;
+                const isSelected = tempSelectedCategories.includes(cat);
                 return (
                   <TouchableOpacity
                     key={cat}
@@ -308,11 +318,13 @@ export default function CellsScreen() {
                     <Text style={styles.optionText}>{cat}</Text>
                     <View
                       style={[
-                        styles.radioCircle,
-                        isSelected && styles.radioCircleSelected,
+                        styles.checkboxBox,
+                        isSelected && styles.checkboxBoxSelected,
                       ]}
                     >
-                      {isSelected && <View style={styles.radioDot} />}
+                      {isSelected && (
+                        <Ionicons name="checkmark" size={14} color="#FFF" />
+                      )}
                     </View>
                   </TouchableOpacity>
                 );
@@ -325,7 +337,7 @@ export default function CellsScreen() {
             >
               <Text style={styles.applyButtonText}>Ver resultados</Text>
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
     </SafeAreaView>
@@ -519,22 +531,17 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#2D3748",
   },
-  radioCircle: {
+  checkboxBox: {
     width: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: 6,
     borderWidth: 2,
     borderColor: "#CBD5E0",
     alignItems: "center",
     justifyContent: "center",
   },
-  radioCircleSelected: {
+  checkboxBoxSelected: {
     borderColor: "#25A688",
-  },
-  radioDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
     backgroundColor: "#25A688",
   },
   applyButton: {
