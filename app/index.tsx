@@ -275,9 +275,9 @@ export default function HomeScreen() {
             onPress={() => router.push("/prayerrequest")}
           />
           <HubButton
-            title="EVENTOS"
+            title="AGENDA"
             iconName="calendar-outline"
-            onPress={() => console.log("Eventos")}
+            onPress={() => router.push("/agenda" as any)}
           />
         </View>
 
